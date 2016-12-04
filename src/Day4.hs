@@ -6,6 +6,7 @@ where
 import           Text.Parsec        hiding (State)
 import           Text.Parsec.String
 import Data.List (group, sort, sortBy)
+import Control.Monad (forM_)
 
 
 data Room = Room { encName :: [String], sectorID :: Int, checksum :: String }
@@ -14,6 +15,12 @@ data Room = Room { encName :: [String], sectorID :: Int, checksum :: String }
 
 real :: Room -> Bool
 real room = checksum room == calcChecksum room
+
+decrypt :: Room -> String
+decrypt room = unwords $ decryptWord <$> encName room
+  where
+    decryptWord = map rotateLetter
+    rotateLetter l = ([l..'z'] ++ ['a'..]) !! (sectorID room `mod` 26)
 
 calcChecksum :: Room -> String
 calcChecksum = take 5 . map snd . sortBy comparison . hist
@@ -24,6 +31,7 @@ calcChecksum = take 5 . map snd . sortBy comparison . hist
                                  x -> x
 
 example = Room ["aaaaa", "bbb", "z", "y", "x"] 123 "abxyz"
+example2 = Room ["qzmt","zixmtkozy","ivhz"] 343 "abxyz"
 
 parseRoom :: Parser Room
 parseRoom =
@@ -42,4 +50,6 @@ loadInput = do
 day4 :: IO ()
 day4 = do
   rooms <- loadInput
-  print $ sum (sectorID <$> filter real rooms)
+  let realRooms = filter real rooms
+  print $ sum (sectorID <$> realRooms)
+  print $ filter (("northpole object storage" ==) . decrypt) realRooms
