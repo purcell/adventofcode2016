@@ -10,5 +10,7 @@ main = do
   day1
   banner 2
   day2
-  banner 2
+  banner 3
   day3
+  banner 4
+  day4
