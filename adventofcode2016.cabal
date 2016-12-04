@@ -18,6 +18,7 @@ library
   exposed-modules:     Lib
   other-modules:       Day1
                      , Day2
+                     , Day3
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5
                      , mtl >= 2.2.1
