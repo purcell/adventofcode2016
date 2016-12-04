@@ -6,41 +6,47 @@ where
 import Data.Maybe (fromMaybe)
 import           Text.Parsec        hiding (State)
 import           Text.Parsec.String
+import Data.Map (Map)
+import qualified Data.Map as M
 
 
 data Direction = U | D | L | R
 
-keypadWidth = 3
-
-data Button = Button { bNum :: Int }
+data Button = Button { bNum :: String, bPos :: (Int, Int) }
   deriving Show
 
-sameRow :: Int -> Int -> Bool
-sameRow a b = (a - 1) `div` keypadWidth == (b - 1) `div` keypadWidth
+type Grid = (Int, Int) -> Maybe String
 
-neighbour :: Button -> Direction -> Maybe Button
-neighbour (Button n) U = if n - keypadWidth >= 1
-                         then Just $ Button (n - keypadWidth)
-                         else Nothing
-neighbour (Button n) D = if n + keypadWidth <= keypadWidth * keypadWidth
-                         then Just $ Button (n + keypadWidth)
-                         else Nothing
-neighbour (Button n) L = if sameRow n (n - 1)
-                         then Just $ Button (n - 1)
-                         else Nothing
-neighbour (Button n) R = if sameRow n (n + 1)
-                         then Just $ Button (n + 1)
-                         else Nothing
-
-move :: Button -> Direction -> Button
-move b d = fromMaybe b $ neighbour b d
-
-
-
-code :: [[Direction]] -> [Int]
-code lines = bNum <$> tail (scanl followLine (Button 5) lines)
+makeGrid :: [String] -> Grid
+makeGrid gridRows = flip M.lookup gridMap
   where
-    followLine = foldl move
+    gridMap = M.fromList [((x, y), [c]) | (y, l) <- lines, (x, c) <- line l, c /= ' ']
+    lines = zip [0..] gridRows
+    line = zip [0..]
+
+squareGrid = makeGrid ["123" ,"456" ,"798"]
+diamondGrid = makeGrid [ "  1  "
+                       , " 234 "
+                       , "56789"
+                       , " ABC "
+                       , "  D  "]
+
+maybeButton :: Grid -> (Int, Int) -> Maybe Button
+maybeButton grid pos = (\n -> Button n pos) <$> grid pos
+
+neighbour :: Grid -> Button -> Direction -> Maybe Button
+neighbour grid (Button _ (x, y)) U = maybeButton grid (x, y - 1)
+neighbour grid (Button _ (x, y)) D = maybeButton grid (x, y + 1)
+neighbour grid (Button _ (x, y)) L = maybeButton grid (x - 1, y)
+neighbour grid (Button _ (x, y)) R = maybeButton grid (x + 1, y)
+
+move :: Grid -> Button -> Direction -> Button
+move grid b d = fromMaybe b $ neighbour grid b d
+
+code :: Grid -> Button -> [[Direction]] -> [String]
+code grid init lines = bNum <$> tail (scanl followLine init lines)
+  where
+    followLine = foldl (move grid)
 
 parseDirection :: Parser Direction
 parseDirection = string "U" *> return U
@@ -58,4 +64,5 @@ loadInput = do
 day2 :: IO ()
 day2 = do
   directions <- loadInput
-  print $ code directions
+  print $ code squareGrid (Button "5" (1,1)) directions
+  print $ code diamondGrid (Button "5" (0, 2)) directions
