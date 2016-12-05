@@ -14,3 +14,5 @@ main = do
   day3
   banner 4
   day4
+  banner 5
+  day5

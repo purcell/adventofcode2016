@@ -20,10 +20,12 @@ library
                      , Day2
                      , Day3
                      , Day4
+                     , Day5
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5
                      , mtl >= 2.2.1
                      , parsec >= 3
+                     , pureMD5 >= 2.1
   default-language:    Haskell2010
 
 executable adventofcode2016
