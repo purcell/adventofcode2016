@@ -3,10 +3,11 @@ module Day5
   )
 where
 
-import Data.Digest.Pure.MD5 as MD5
-import Data.String
-import Data.Maybe (catMaybes)
-import qualified Data.Map as M
+import           Crypto.Hash
+import           Data.ByteString (ByteString)
+import qualified Data.Map        as M
+import           Data.Maybe      (catMaybes)
+import           Data.String     (fromString)
 
 
 hashes :: String -> [String]
@@ -14,6 +15,9 @@ hashes seed = hexMD5 . (seed ++) . show <$> [(0::Integer)..]
 
 hexMD5 :: String -> String
 hexMD5 = show . md5 . fromString
+  where
+    md5 :: ByteString -> Digest MD5
+    md5 = hash
 
 interesting :: String -> Bool
 interesting s = "00000" == take 5 s

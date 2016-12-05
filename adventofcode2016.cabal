@@ -25,7 +25,8 @@ library
                      , containers >= 0.5
                      , mtl >= 2.2.1
                      , parsec >= 3
-                     , pureMD5 >= 2.1
+                     , cryptonite >= 0.19
+                     , bytestring >= 0.10
   default-language:    Haskell2010
 
 executable adventofcode2016
