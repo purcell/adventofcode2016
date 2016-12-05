@@ -1,18 +1,23 @@
 module Main where
 
+import System.Environment (getArgs)
 import           Lib
+import Control.Monad (forM_)
 
-banner n = putStrLn $ "==== DAY " ++ show n
+
+day :: String -> IO ()
+day n = runDay $ case n of
+                   "1" -> day1
+                   "2" -> day2
+                   "3" -> day3
+                   "4" -> day4
+                   "5" -> day5
+                   _ -> error $ "No such day " ++ show n
+  where
+    runDay action = banner >> action
+    banner = putStrLn $ "==== DAY " ++ n
 
 main :: IO ()
 main = do
-  banner 1
-  day1
-  banner 2
-  day2
-  banner 3
-  day3
-  banner 4
-  day4
-  banner 5
-  day5
+  args <- getArgs
+  forM_ args day
