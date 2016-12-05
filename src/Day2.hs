@@ -6,7 +6,6 @@ where
 import Data.Maybe (fromMaybe)
 import           Text.Parsec        hiding (State)
 import           Text.Parsec.String
-import Data.Map (Map)
 import qualified Data.Map as M
 
 
@@ -24,7 +23,9 @@ makeGrid gridRows = flip M.lookup gridMap
     lines = zip [0..] gridRows
     line = zip [0..]
 
-squareGrid = makeGrid ["123" ,"456" ,"798"]
+squareGrid = makeGrid [ "123"
+                      , "456"
+                      , "798"]
 diamondGrid = makeGrid [ "  1  "
                        , " 234 "
                        , "56789"
@@ -32,7 +33,7 @@ diamondGrid = makeGrid [ "  1  "
                        , "  D  "]
 
 maybeButton :: Grid -> (Int, Int) -> Maybe Button
-maybeButton grid pos = (\n -> Button n pos) <$> grid pos
+maybeButton grid pos = flip Button pos <$> grid pos
 
 neighbour :: Grid -> Button -> Direction -> Maybe Button
 neighbour grid (Button _ (x, y)) U = maybeButton grid (x, y - 1)
@@ -43,8 +44,8 @@ neighbour grid (Button _ (x, y)) R = maybeButton grid (x + 1, y)
 move :: Grid -> Button -> Direction -> Button
 move grid b d = fromMaybe b $ neighbour grid b d
 
-code :: Grid -> Button -> [[Direction]] -> [String]
-code grid init lines = bNum <$> tail (scanl followLine init lines)
+code :: Grid -> Button -> [[Direction]] -> String
+code grid init lines = concatMap bNum $ tail (scanl followLine init lines)
   where
     followLine = foldl (move grid)
 
@@ -64,5 +65,5 @@ loadInput = do
 day2 :: IO ()
 day2 = do
   directions <- loadInput
-  print $ code squareGrid (Button "5" (1,1)) directions
-  print $ code diamondGrid (Button "5" (0, 2)) directions
+  putStrLn $ code squareGrid (Button "5" (1,1)) directions
+  putStrLn $ code diamondGrid (Button "5" (0, 2)) directions
