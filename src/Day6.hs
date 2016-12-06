@@ -4,29 +4,19 @@ module Day6
 
 import Text.Parsec hiding (State)
 import Text.Parsec.String
-import Data.List (maximumBy, minimumBy)
-import Data.Ord (comparing)
-import Data.Map (Map)
-import qualified Data.Map as M
+import Data.List (sort, group, transpose)
+import Control.Arrow ((&&&))
 
-frequencies :: [String] -> [Map Char Int]
-frequencies =
-  M.elems .
-  foldl (M.unionWith (M.unionWith (+))) M.empty .
-  fmap (M.fromList . zip [(0 :: Int) ..] . frequenciesInWord)
-
-frequenciesInWord :: String -> [Map Char Int]
-frequenciesInWord s = uncurry M.singleton <$> zip s (repeat 1)
+decode :: ([(Int, Char)] -> (Int, Char)) -> [String] -> String
+decode chooser = map ((snd . chooser) . column) . transpose
+  where
+    column = map (length &&& head) . group . sort
 
 decodeMostFrequent :: [String] -> String
-decodeMostFrequent = map mostFrequent . frequencies
-  where
-    mostFrequent = fst . maximumBy (comparing snd) . M.toList
+decodeMostFrequent = decode maximum
 
 decodeLeastFrequent :: [String] -> String
-decodeLeastFrequent = map leastFrequent . frequencies
-  where
-    leastFrequent = fst . minimumBy (comparing snd) . M.toList
+decodeLeastFrequent = decode minimum
 
 loadInput :: IO [String]
 loadInput = do
