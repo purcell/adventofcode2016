@@ -12,6 +12,7 @@ day n = runDay $ case n of
                    "3" -> day3
                    "4" -> day4
                    "5" -> day5
+                   "6" -> day6
                    _ -> error $ "No such day " ++ show n
   where
     runDay action = banner >> action
