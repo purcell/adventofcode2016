@@ -1,40 +1,56 @@
 {-# LANGUAGE TupleSections #-}
+
 module Day1
   ( day1
-  )
-where
+  ) where
 
-import           Data.List          (groupBy)
-import           Data.Maybe         (listToMaybe)
-import           Data.Set           (Set)
-import qualified Data.Set           as S
-import           Text.Parsec        hiding (State)
-import           Text.Parsec.String
+import qualified Data.Set as S
+import Text.Parsec hiding (State)
+import Text.Parsec.String
 
+data TurnDirection
+  = L
+  | R
 
-data TurnDirection = L | R
+data Instruction = Instruction
+  { iDir :: TurnDirection
+  , iBlocks :: Blocks
+  }
 
-data Instruction = Instruction { iDir    :: TurnDirection
-                               , iBlocks :: Blocks}
-
-data Direction = N | E | S | W
-  deriving Show
-
+data Direction
+  = N
+  | E
+  | S
+  | W
+  deriving (Show)
 
 type Blocks = Int
 
-data Position = Position { pNetN :: Blocks
-                         , pNetE :: Blocks }
-                deriving (Eq, Ord, Show)
+data Position = Position
+  { pNetN :: Blocks
+  , pNetE :: Blocks
+  } deriving (Eq, Ord, Show)
 
 shortestDistance :: Position -> Blocks
 shortestDistance (Position n e) = abs n + abs e
 
 move :: Position -> Direction -> Position
-move p@(Position n e) N = p { pNetN = n + 1 }
-move p@(Position n e) S = p { pNetN = n - 1 }
-move p@(Position n e) E = p { pNetE = e + 1 }
-move p@(Position n e) W = p { pNetE = e - 1 }
+move p@(Position n e) N =
+  p
+  { pNetN = n + 1
+  }
+move p@(Position n e) S =
+  p
+  { pNetN = n - 1
+  }
+move p@(Position n e) E =
+  p
+  { pNetE = e + 1
+  }
+move p@(Position n e) W =
+  p
+  { pNetE = e - 1
+  }
 
 rotate :: Direction -> TurnDirection -> Direction
 rotate N L = W
@@ -43,7 +59,6 @@ rotate S L = E
 rotate W L = S
 rotate d R = rotate (rotate (rotate d L) L) L
 
-
 parseInstruction :: Parser Instruction
 parseInstruction = Instruction <$> parseDirection <*> parseNumber
   where
@@ -51,7 +66,8 @@ parseInstruction = Instruction <$> parseDirection <*> parseNumber
     parseNumber = read <$> many1 digit
 
 parseFile :: String -> IO (Either ParseError [Instruction])
-parseFile = parseFromFile (sepBy parseInstruction (string ", ") <* newline <* eof)
+parseFile =
+  parseFromFile (sepBy parseInstruction (string ", ") <* newline <* eof)
 
 runInstructions :: [Instruction] -> [Position]
 runInstructions instrs = scanl move (Position 0 0) moves
@@ -61,11 +77,16 @@ runInstructions instrs = scanl move (Position 0 0) moves
     directions = tail $ scanl rotate N (iDir <$> instrs)
     distances = iBlocks <$> instrs
 
-firstDuplicate :: Ord a => [a] -> Maybe a
+firstDuplicate
+  :: Ord a
+  => [a] -> Maybe a
 firstDuplicate = go S.empty
-  where go _ [] = Nothing
-        go seen (x:xs) = if x `S.member` seen then Just x
-                         else go (S.insert x seen) xs
+  where
+    go _ [] = Nothing
+    go seen (x:xs) =
+      if x `S.member` seen
+        then Just x
+        else go (S.insert x seen) xs
 
 loadInput :: IO [Instruction]
 loadInput = do

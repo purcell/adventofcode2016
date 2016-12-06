@@ -1,36 +1,40 @@
 module Day2
   ( day2
-  )
-where
+  ) where
 
-import Data.Maybe (fromMaybe)
-import           Text.Parsec        hiding (State)
-import           Text.Parsec.String
 import qualified Data.Map as M
+import Data.Maybe (fromMaybe)
+import Text.Parsec hiding (State)
+import Text.Parsec.String
 
+data Direction
+  = U
+  | D
+  | L
+  | R
 
-data Direction = U | D | L | R
-
-data Button = Button { bNum :: String, bPos :: (Int, Int) }
-  deriving Show
+data Button = Button
+  { bNum :: String
+  , bPos :: (Int, Int)
+  } deriving (Show)
 
 type Grid = (Int, Int) -> Maybe String
 
 makeGrid :: [String] -> Grid
 makeGrid gridRows = flip M.lookup gridMap
   where
-    gridMap = M.fromList [((x, y), [c]) | (y, l) <- lines, (x, c) <- line l, c /= ' ']
-    lines = zip [0..] gridRows
-    line = zip [0..]
+    gridMap =
+      M.fromList
+        [ ((x, y), [c])
+        | (y, l) <- lines
+        , (x, c) <- line l
+        , c /= ' ' ]
+    lines = zip [0 ..] gridRows
+    line = zip [0 ..]
 
-squareGrid = makeGrid [ "123"
-                      , "456"
-                      , "798"]
-diamondGrid = makeGrid [ "  1  "
-                       , " 234 "
-                       , "56789"
-                       , " ABC "
-                       , "  D  "]
+squareGrid = makeGrid ["123", "456", "798"]
+
+diamondGrid = makeGrid ["  1  ", " 234 ", "56789", " ABC ", "  D  "]
 
 maybeButton :: Grid -> (Int, Int) -> Maybe Button
 maybeButton grid pos = flip Button pos <$> grid pos
@@ -50,14 +54,14 @@ code grid init lines = concatMap bNum $ tail (scanl followLine init lines)
     followLine = foldl (move grid)
 
 parseDirection :: Parser Direction
-parseDirection = string "U" *> return U
-                 <|> string "D" *> return D
-                 <|> string "L" *> return L
-                 <|> string "R" *> return R
+parseDirection =
+  string "U" *> return U <|> string "D" *> return D <|> string "L" *> return L <|>
+  string "R" *> return R
 
 loadInput :: IO [[Direction]]
 loadInput = do
-  result <- parseFromFile (many1 (many1 parseDirection <* newline) <* eof) "input/2.txt"
+  result <-
+    parseFromFile (many1 (many1 parseDirection <* newline) <* eof) "input/2.txt"
   case result of
     Right directions -> return directions
     Left e -> error (show e)
@@ -65,5 +69,5 @@ loadInput = do
 day2 :: IO ()
 day2 = do
   directions <- loadInput
-  putStrLn $ code squareGrid (Button "5" (1,1)) directions
+  putStrLn $ code squareGrid (Button "5" (1, 1)) directions
   putStrLn $ code diamondGrid (Button "5" (0, 2)) directions
