@@ -4,7 +4,7 @@ module Day6
 
 import Text.Parsec hiding (State)
 import Text.Parsec.String
-import Data.List (maximumBy)
+import Data.List (maximumBy, minimumBy)
 import Data.Ord (comparing)
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -18,11 +18,15 @@ frequencies =
 frequenciesInWord :: String -> [Map Char Int]
 frequenciesInWord s = uncurry M.singleton <$> zip s (repeat 1)
 
-foo :: [String] -> String
-foo = map mostFrequent . frequencies
+decodeMostFrequent :: [String] -> String
+decodeMostFrequent = map mostFrequent . frequencies
   where
-    mostFrequent :: Map Char Int -> Char
     mostFrequent = fst . maximumBy (comparing snd) . M.toList
+
+decodeLeastFrequent :: [String] -> String
+decodeLeastFrequent = map leastFrequent . frequencies
+  where
+    leastFrequent = fst . minimumBy (comparing snd) . M.toList
 
 loadInput :: IO [String]
 loadInput = do
@@ -34,4 +38,5 @@ loadInput = do
 day6 :: IO ()
 day6 = do
   strings <- loadInput
-  putStrLn $ foo strings
+  putStrLn $ decodeMostFrequent strings
+  putStrLn $ decodeLeastFrequent strings
