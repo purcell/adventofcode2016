@@ -6,7 +6,7 @@ module Day7
 
 import Text.Parsec hiding (State)
 import Text.Parsec.String
-import Data.List (partition, intersect)
+import Data.List (partition, isInfixOf)
 
 data Net
   = Super
@@ -15,13 +15,6 @@ data Net
 newtype IPAddress =
   IPAddress [(Net, String)]
 
-superHyper :: IPAddress -> ([String], [String])
-superHyper (IPAddress parts) = (snd <$> super, snd <$> hyper)
-  where
-    (super, hyper) = partition supernet parts
-    supernet (Super, _) = True
-    supernet _ = False
-
 abba :: String -> Bool
 abba (a:b:c:d:_)
   | a /= b && a == d && b == c = True
@@ -29,19 +22,20 @@ abba (_:xs) = abba xs
 abba _ = False
 
 canTLS :: IPAddress -> Bool
-canTLS a = any abba super && not (any abba hyper)
+canTLS (IPAddress parts) = abbas super && not (abbas hyper)
   where
-    (super, hyper) = superHyper a
+    abbas = any abba . fmap snd
+    (super, hyper) = partition supernet parts
+    supernet (Super, _) = True
+    supernet _ = False
 
 canSSL :: IPAddress -> Bool
-canSSL a =
-  not . null $ (invertABA <$> concatMap abas super) `intersect` concatMap abas hyper
-  where
-    (super, hyper) = superHyper a
-
-invertABA :: String -> String
-invertABA (a:b:_) = [b, a, b]
-invertABA _ = undefined
+canSSL (IPAddress parts) =
+  or
+    [ [b, a, b] `isInfixOf` hyper
+    | (Super, super) <- parts
+    , [a, b, _] <- abas super
+    , (Hyper, hyper) <- parts ]
 
 abas :: String -> [String]
 abas = go []
