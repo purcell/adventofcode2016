@@ -14,6 +14,16 @@ data Screen = Screen
   , sPix :: Map (Int, Int) Bool
   }
 
+instance Show Screen where
+  show s = unlines $ map showRow [0 .. (sMaxY s)]
+    where
+      showRow :: Int -> String
+      showRow y =
+        [ if (x, y) `M.member` (sPix s)
+           then '#'
+           else '.'
+        | x <- [0 .. (sMaxX s)] ]
+
 initialScreen = Screen 50 6 M.empty
 
 applyInstruction :: Screen -> Instruction -> Screen
@@ -82,4 +92,6 @@ loadInput = do
 day8 :: IO ()
 day8 = do
   input <- loadInput
-  print $ litPixels $ foldl applyInstruction initialScreen input
+  let result = foldl applyInstruction initialScreen input
+  print $ litPixels result
+  print result
