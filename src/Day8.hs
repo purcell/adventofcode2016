@@ -8,10 +8,12 @@ import Text.Parsec.String
 import Data.Map (Map)
 import qualified Data.Map as M
 
+type PixelMap = Map (Int, Int) Bool
+
 data Screen = Screen
   { sMaxX :: Int
   , sMaxY :: Int
-  , sPix :: Map (Int, Int) Bool
+  , sPix :: PixelMap
   }
 
 instance Show Screen where
@@ -19,18 +21,22 @@ instance Show Screen where
     where
       showRow :: Int -> String
       showRow y =
-        [ if (x, y) `M.member` (sPix s)
+        [ if (x, y) `M.member` sPix s
            then '#'
            else '.'
         | x <- [0 .. (sMaxX s)] ]
 
+initialScreen :: Screen
 initialScreen = Screen 50 6 M.empty
 
-applyInstruction :: Screen -> Instruction -> Screen
-applyInstruction s (Rect w h) =
+modScreen :: Screen -> (PixelMap -> PixelMap) -> Screen
+modScreen s f =
   s
-  { sPix = M.unionWith (||) (sPix s) newPix
+  { sPix = f (sPix s)
   }
+
+applyInstruction :: Screen -> Instruction -> Screen
+applyInstruction s (Rect w h) = modScreen s (\p -> M.unionWith (||) p newPix)
   where
     newPix =
       M.fromList $
@@ -39,21 +45,15 @@ applyInstruction s (Rect w h) =
         | x <- [0 .. (w - 1)]
         , y <- [0 .. (h - 1)] ]
         (repeat True)
-applyInstruction s (Rotate Col idx off) =
-  s
-  { sPix = M.mapKeys rotateCol (sPix s)
-  }
+applyInstruction s (Rotate Col idx off) = modScreen s (M.mapKeys rotateCol)
   where
     rotateCol (x, y) =
       if x == idx
         then (x, (y + off) `mod` sMaxY s)
         else (x, y)
-applyInstruction s (Rotate Row idx off) =
-  s
-  { sPix = M.mapKeys rotateCol (sPix s)
-  }
+applyInstruction s (Rotate Row idx off) = modScreen s (M.mapKeys rotateRow)
   where
-    rotateCol (x, y) =
+    rotateRow (x, y) =
       if y == idx
         then ((x + off) `mod` sMaxX s, y)
         else (x, y)
