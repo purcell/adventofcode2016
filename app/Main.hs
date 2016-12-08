@@ -15,6 +15,7 @@ day n =
     "5" -> day5
     "6" -> day6
     "7" -> day7
+    "8" -> day8
     _ -> error $ "No such day " ++ show n
   where
     runDay action = banner >> action
