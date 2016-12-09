@@ -24,6 +24,7 @@ library
                      , Day6
                      , Day7
                      , Day8
+                     , Day9
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5
                      , mtl >= 2.2.1
