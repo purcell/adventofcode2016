@@ -4,8 +4,7 @@ module Day7
   ( day7
   ) where
 
-import Text.Parsec hiding (State)
-import Text.Parsec.String
+import Day
 import Data.List (partition, isInfixOf)
 
 data Net
@@ -52,16 +51,9 @@ parseIPAddress =
     (((Super, ) <$> many1 letter) <|>
      ((Hyper, ) <$> (string "[" *> many1 letter <* string "]")))
 
-loadInput :: IO [IPAddress]
-loadInput = do
-  result <-
-    parseFromFile (many1 (parseIPAddress <* newline) <* eof) "input/7.txt"
-  case result of
-    Right xs -> return xs
-    Left e -> error (show e)
-
-day7 :: IO ()
-day7 = do
-  input <- loadInput
-  print $ length $ filter canTLS input
-  print $ length $ filter canSSL input
+day7 =
+  Day
+    7
+    (many1 (parseIPAddress <* newline))
+    (return . show . length . filter canTLS)
+    (return . show . length . filter canSSL)

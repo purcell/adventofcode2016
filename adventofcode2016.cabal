@@ -16,7 +16,8 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Lib
-  other-modules:       Day1
+  other-modules:       Day
+                     , Day1
                      , Day2
                      , Day3
                      , Day4

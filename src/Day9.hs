@@ -2,8 +2,7 @@ module Day9
   ( day9
   ) where
 
-import Text.Parsec hiding (State)
-import Text.Parsec.String
+import Day
 
 data Block
   = Repeat Int
@@ -32,15 +31,9 @@ parseBlock = try parseRepeat <|> (Plain <$> many1 letter)
         Left err -> fail (show err)
     number = read <$> many1 digit
 
-loadInput :: IO [Block]
-loadInput = do
-  result <- parseFromFile (many1 parseBlock <* newline <* eof) "input/9.txt"
-  case result of
-    Right xs -> return xs
-    Left e -> error (show e)
-
-day9 :: IO ()
-day9 = do
-  input <- loadInput
-  print $ sum (blockLenA <$> input)
-  print $ sum (blockLenB <$> input)
+day9 =
+  Day
+    9
+    (many1 parseBlock <* newline)
+    (return . show . sum . fmap blockLenA)
+    (return . show . sum . fmap blockLenB)

@@ -2,10 +2,9 @@ module Day2
   ( day2
   ) where
 
+import Day
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
-import Text.Parsec hiding (State)
-import Text.Parsec.String
 
 data Direction
   = U
@@ -58,16 +57,9 @@ parseDirection =
   string "U" *> return U <|> string "D" *> return D <|> string "L" *> return L <|>
   string "R" *> return R
 
-loadInput :: IO [[Direction]]
-loadInput = do
-  result <-
-    parseFromFile (many1 (many1 parseDirection <* newline) <* eof) "input/2.txt"
-  case result of
-    Right directions -> return directions
-    Left e -> error (show e)
-
-day2 :: IO ()
-day2 = do
-  directions <- loadInput
-  putStrLn $ code squareGrid (Button "5" (1, 1)) directions
-  putStrLn $ code diamondGrid (Button "5" (0, 2)) directions
+day2 =
+  Day
+    2
+    (many1 (many1 parseDirection <* newline))
+    (return . code squareGrid (Button "5" (1, 1)))
+    (return . code diamondGrid (Button "5" (0, 2)))

@@ -2,6 +2,7 @@ module Day5
   ( day5
   ) where
 
+import Day
 import Crypto.Hash
 import Data.ByteString (ByteString)
 import qualified Data.Map as M
@@ -39,8 +40,9 @@ solutionB hs = M.elems $ head $ dropWhile incomplete $ scanl addPair M.empty pai
       | p >= '0' && p < '8' = Just (p, c)
     posAndChar _ = Nothing
 
-day5 :: IO ()
-day5 = do
-  let hs = interestingHashes "ojvtpuvg"
-  putStrLn $ solutionA hs
-  putStrLn $ solutionB hs
+day5 =
+  Day
+    5
+    (many1 letter <* newline)
+    (return . solutionA . hashes)
+    (return . solutionB . hashes)

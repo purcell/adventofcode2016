@@ -2,8 +2,7 @@ module Day3
   ( day3
   ) where
 
-import Text.Parsec hiding (State)
-import Text.Parsec.String
+import Day
 import Data.List (transpose, splitAt)
 
 data Triangle =
@@ -23,17 +22,6 @@ spaceNumber = spaces *> parseInt
   where
     parseInt = read <$> many1 digit
 
-parseTriangle :: Parser Triangle
-parseTriangle = Triangle <$> spaceNumber <*> spaceNumber <*> spaceNumber
-
-loadInputByRows :: IO [Triangle]
-loadInputByRows = do
-  result <-
-    parseFromFile (many1 (parseTriangle <* newline) <* eof) "input/3.txt"
-  case result of
-    Right triangles -> return triangles
-    Left e -> error (show e)
-
 groupsOf :: Int -> [a] -> [[a]]
 groupsOf = go []
   where
@@ -42,18 +30,12 @@ groupsOf = go []
       where
         (before, after) = splitAt n xs
 
-loadInputByCols :: IO [Triangle]
-loadInputByCols = do
-  result <-
-    parseFromFile (many1 (count 3 spaceNumber <* newline) <* eof) "input/3.txt"
-  case result of
-    Right rows -> return $ toTriangle <$> groupsOf 3 (concat (transpose rows))
-      where toTriangle [a, b, c] = Triangle a b c
-    Left e -> error (show e)
+toTriangle [a, b, c] = Triangle a b c
 
-day3 :: IO ()
-day3 = do
-  rowTriangles <- loadInputByRows
-  print $ length (filter possible rowTriangles)
-  colTriangles <- loadInputByCols
-  print $ length (filter possible colTriangles)
+day3 =
+  Day
+    3
+    (many1 (count 3 spaceNumber <* newline))
+    (return . show . length . filter possible . fmap toTriangle)
+    (return .
+     show . length . filter possible . fmap toTriangle . groupsOf 3 . concat . transpose)

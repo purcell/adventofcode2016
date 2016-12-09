@@ -2,8 +2,7 @@ module Day6
   ( day6
   ) where
 
-import Text.Parsec hiding (State)
-import Text.Parsec.String
+import Day
 import Data.List (sort, group, transpose)
 import Control.Arrow ((&&&))
 
@@ -18,15 +17,9 @@ decodeMostFrequent = decode maximum
 decodeLeastFrequent :: [String] -> String
 decodeLeastFrequent = decode minimum
 
-loadInput :: IO [String]
-loadInput = do
-  result <- parseFromFile (many1 (many1 letter <* newline) <* eof) "input/6.txt"
-  case result of
-    Right xs -> return xs
-    Left e -> error (show e)
-
-day6 :: IO ()
-day6 = do
-  strings <- loadInput
-  putStrLn $ decodeMostFrequent strings
-  putStrLn $ decodeLeastFrequent strings
+day6 =
+  Day
+    6
+    (many1 (many1 letter <* newline))
+    (return . decodeMostFrequent)
+    (return . decodeLeastFrequent)

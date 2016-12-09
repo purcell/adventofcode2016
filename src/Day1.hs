@@ -4,9 +4,8 @@ module Day1
   ( day1
   ) where
 
+import Day
 import qualified Data.Set as S
-import Text.Parsec hiding (State)
-import Text.Parsec.String
 
 data TurnDirection
   = L
@@ -88,16 +87,9 @@ firstDuplicate = go S.empty
         then Just x
         else go (S.insert x seen) xs
 
-loadInput :: IO [Instruction]
-loadInput = do
-  result <- parseFile "input/1.txt"
-  case result of
-    Right instrs -> return instrs
-    Left e -> error (show e)
-
-day1 :: IO ()
-day1 = do
-  instrs <- loadInput
-  let positions = runInstructions instrs
-  print $ shortestDistance $ last positions
-  print $ shortestDistance <$> firstDuplicate positions
+day1 =
+  Day
+    1
+    (sepBy parseInstruction (string ", ") <* newline)
+    (return . show . shortestDistance . last . runInstructions)
+    (return . show . fmap shortestDistance . firstDuplicate . runInstructions)

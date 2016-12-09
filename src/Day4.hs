@@ -2,8 +2,7 @@ module Day4
   ( day4
   ) where
 
-import Text.Parsec hiding (State)
-import Text.Parsec.String
+import Day
 import Data.List (group, sort, sortBy)
 
 data Room = Room
@@ -41,16 +40,10 @@ parseRoom =
   where
     parseInt = read <$> many1 digit
 
-loadInput :: IO [Room]
-loadInput = do
-  result <- parseFromFile (many1 (parseRoom <* newline) <* eof) "input/4.txt"
-  case result of
-    Right rooms -> return rooms
-    Left e -> error (show e)
-
-day4 :: IO ()
-day4 = do
-  rooms <- loadInput
-  let realRooms = filter real rooms
-  print $ sum (sectorID <$> realRooms)
-  print $ filter (("northpole object storage" ==) . decrypt) realRooms
+day4 =
+  Day
+    4
+    (many1 (parseRoom <* newline))
+    (return . show . sum . fmap sectorID . filter real)
+    (return .
+     show . filter (("northpole object storage" ==) . decrypt) . filter real)

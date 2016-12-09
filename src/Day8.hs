@@ -2,9 +2,7 @@ module Day8
   ( day8
   ) where
 
-import Text.Parsec hiding (State)
-import Text.Parsec.String
-
+import Day
 import Data.Set (Set)
 import qualified Data.Set as S
 
@@ -79,17 +77,12 @@ parseInstruction =
   where
     number = read <$> many1 digit
 
-loadInput :: IO [Instruction]
-loadInput = do
-  result <-
-    parseFromFile (many1 (parseInstruction <* newline) <* eof) "input/8.txt"
-  case result of
-    Right xs -> return xs
-    Left e -> error (show e)
+run :: [Instruction] -> Screen
+run = foldl applyInstruction initialScreen
 
-day8 :: IO ()
-day8 = do
-  input <- loadInput
-  let result = foldl applyInstruction initialScreen input
-  print $ litPixels result
-  print result
+day8 =
+  Day
+    8
+    (many1 (parseInstruction <* newline))
+    (return . show . litPixels . run)
+    (return . show . run)
