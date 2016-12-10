@@ -7,6 +7,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import Control.Monad.State
 import Data.List (nub, sort)
+import Data.Maybe (fromMaybe)
 
 newtype BotNo = BotNo
   { getBotNo :: Int
@@ -37,66 +38,39 @@ parseInstr =
 
 type BotState = State (Map BotNo [Int])
 
-inputsOf :: [Instr] -> BotNo -> BotState [Int]
-inputsOf instrs botno = do
-  cached <- M.lookup botno <$> get
-  case cached of
-    Just vs -> return vs
-    _ -> do
-      mins <- mapM (fmap minimum . inputsOf instrs) minfeeds
-      maxes <- mapM (fmap maximum . inputsOf instrs) maxfeeds
-      let inputs = values ++ mins ++ maxes
-      modify (M.insert botno inputs)
-      return inputs
-  where
-    values =
-      [ v
-      | (Input v b) <- instrs
-      , b == botno ]
-    minfeeds =
-      [ b
-      | (Pass b (BotReceiver lo) _) <- instrs
-      , lo == botno ]
-    maxfeeds =
-      [ b
-      | (Pass b _ (BotReceiver hi)) <- instrs
-      , hi == botno ]
+runInstrs :: [Instr] -> BotState ()
+runInstrs [] = return ()
+runInstrs ((Input v b):xs) = putVal b v >> runInstrs xs
+runInstrs (p@(Pass b lo hi):xs) = do
+  vals <- getVal b
+  case sort vals of
+    [v1, v2] -> do
+      pass lo v1
+      pass hi v2
+      runInstrs xs
+    _ -> runInstrs (xs ++ [p])
 
-output :: [Instr] -> Int -> BotState Int
-output instrs n = do
-  mins <- mapM (fmap minimum . inputsOf instrs) minfeeds
-  maxes <- mapM (fmap maximum . inputsOf instrs) maxfeeds
-  return $ head (mins ++ maxes)
-  where
-    minfeeds =
-      [ b
-      | (Pass b (OutputReceiver o) _) <- instrs
-      , o == n ]
-    maxfeeds =
-      [ b
-      | (Pass b _ (OutputReceiver o)) <- instrs
-      , o == n ]
+pass :: Receiver -> Int -> BotState ()
+pass (BotReceiver b) v = putVal b v
+pass (OutputReceiver b) v = return () -- TODO
 
-runInstrs :: [Instr] -> [(BotNo, [Int])]
-runInstrs instrs = M.toList $ execState (mapM_ (inputsOf instrs) knownBots) M.empty
-  where
-    knownBots =
-      nub $
-      [ b
-      | (Input _ b) <- instrs ] ++
-      concat
-        [ [b, lo]
-        | (Pass b (BotReceiver lo) _) <- instrs ] ++
-      concat
-        [ [b, hi]
-        | (Pass b _ (BotReceiver hi)) <- instrs ]
+getVal :: BotNo -> BotState [Int]
+getVal b = (fromMaybe [] . M.lookup b) <$> get
 
-partA = filter (\(_, vs) -> sort vs == [17, 61]) . runInstrs
+putVal :: BotNo -> Int -> BotState ()
+putVal b i = do
+  vals <- getVal b
+  modify (M.insert b (i : vals))
 
-partB instrs = evalState mult M.empty
-  where
-    mult = product <$> mapM (output instrs) [0, 1, 2]
+partA =
+  filter (\(_, vs) -> sort vs == [17, 61]) .
+  M.toList . flip execState M.empty . runInstrs
 
+partB = return "TODO"
+
+-- partB instrs = evalState mult M.empty
+--   where
+--     mult = product <$> mapM (output instrs) [0, 1, 2]
 day10 =
   Day
     10
