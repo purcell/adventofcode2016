@@ -62,13 +62,28 @@ inputsOf instrs botno = do
       | (Pass b _ (BotReceiver hi)) <- instrs
       , hi == botno ]
 
+output :: [Instr] -> Int -> BotState Int
+output instrs n = do
+  mins <- mapM (fmap minimum . inputsOf instrs) minfeeds
+  maxes <- mapM (fmap maximum . inputsOf instrs) maxfeeds
+  return $ head (mins ++ maxes)
+  where
+    minfeeds =
+      [ b
+      | (Pass b (OutputReceiver o) _) <- instrs
+      , o == n ]
+    maxfeeds =
+      [ b
+      | (Pass b _ (OutputReceiver o)) <- instrs
+      , o == n ]
+
 runInstrs :: [Instr] -> [(BotNo, [Int])]
 runInstrs instrs = M.toList $ execState (mapM_ (inputsOf instrs) knownBots) M.empty
   where
     knownBots =
       nub $
       [ b
-      | (Input v b) <- instrs ] ++
+      | (Input _ b) <- instrs ] ++
       concat
         [ [b, lo]
         | (Pass b (BotReceiver lo) _) <- instrs ] ++
@@ -76,9 +91,15 @@ runInstrs instrs = M.toList $ execState (mapM_ (inputsOf instrs) knownBots) M.em
         [ [b, hi]
         | (Pass b _ (BotReceiver hi)) <- instrs ]
 
+partA = filter (\(_, vs) -> sort vs == [17, 61]) . runInstrs
+
+partB instrs = evalState mult M.empty
+  where
+    mult = product <$> mapM (output instrs) [0, 1, 2]
+
 day10 =
   Day
     10
     (many1 (parseInstr <* newline))
-    (return . show . filter (\(b, vs) -> sort vs == [17, 61]) . runInstrs)
-    (return . const "TODO")
+    (return . show . partA)
+    (return . show . partB)
