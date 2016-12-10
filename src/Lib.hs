@@ -12,3 +12,4 @@ import Day6 as X
 import Day7 as X
 import Day8 as X
 import Day9 as X
+import Day10 as X
