@@ -6,7 +6,8 @@ import Day
 import Data.Map (Map)
 import qualified Data.Map as M
 import Control.Monad.State
-import Data.List (nub, sort)
+import Control.Monad.Writer
+import Data.List (sort)
 import Data.Maybe (fromMaybe)
 
 newtype BotNo = BotNo
@@ -36,23 +37,23 @@ parseInstr =
       (BotReceiver <$> (string "bot " *> botno)) <|>
       (OutputReceiver <$> (string "output " *> number))
 
-type BotState = State (Map BotNo [Int])
+type BotState = WriterT [(Int, Int)] (State (Map BotNo [Int]))
 
 runInstrs :: [Instr] -> BotState ()
 runInstrs [] = return ()
-runInstrs ((Input v b):xs) = putVal b v >> runInstrs xs
+runInstrs (Input v b:xs) = putVal b v >> runInstrs xs
 runInstrs (p@(Pass b lo hi):xs) = do
   vals <- getVal b
   case sort vals of
     [v1, v2] -> do
-      pass lo v1
-      pass hi v2
+      passVal lo v1
+      passVal hi v2
       runInstrs xs
     _ -> runInstrs (xs ++ [p])
 
-pass :: Receiver -> Int -> BotState ()
-pass (BotReceiver b) v = putVal b v
-pass (OutputReceiver b) v = return () -- TODO
+passVal :: Receiver -> Int -> BotState ()
+passVal (BotReceiver b) v = putVal b v
+passVal (OutputReceiver b) v = tell [(b, v)]
 
 getVal :: BotNo -> BotState [Int]
 getVal b = (fromMaybe [] . M.lookup b) <$> get
@@ -64,13 +65,14 @@ putVal b i = do
 
 partA =
   filter (\(_, vs) -> sort vs == [17, 61]) .
-  M.toList . flip execState M.empty . runInstrs
+  M.toList . flip execState M.empty . runWriterT . runInstrs
 
-partB = return "TODO"
+partB :: [Instr] -> Int
+partB instrs = product $ map snd $ filter ((`elem` [0, 1, 2]) . fst) outputs
+  where
+    outputs :: [(Int, Int)]
+    outputs = flip evalState M.empty $ execWriterT (runInstrs instrs)
 
--- partB instrs = evalState mult M.empty
---   where
---     mult = product <$> mapM (output instrs) [0, 1, 2]
 day10 =
   Day
     10
