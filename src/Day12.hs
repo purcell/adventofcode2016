@@ -93,12 +93,17 @@ runInstr (JumpNotZero val step) = do
 runInstr (Inc reg) = modifyReg reg (+ 1) >> return 1
 runInstr (Dec reg) = modifyReg reg (\i -> i - 1) >> return 1
 
-partA :: [Instr] -> Int
-partA = (M.! 'a') . stRegs . flip execState (SimState 0 M.empty) . runReaderT run
+finalA :: Map Char Int -> [Instr] -> Int
+finalA regs =
+  (M.! 'a') . stRegs . flip execState (SimState 0 regs) . runReaderT run
+
+partA = finalA M.empty
+
+partB = finalA (M.singleton 'c' 1)
 
 day12 =
   Day
     12
     (many (parseInstr <* newline))
     (return . show . partA)
-    (return . const "TODO")
+    (return . show . partB)
