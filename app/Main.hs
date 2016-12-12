@@ -18,6 +18,7 @@ day n =
     "9" -> runDay day9
     "10" -> runDay day10
     "11" -> runDay day11
+    "12" -> runDay day12
     _ -> error $ "No such day " ++ show n
 
 main :: IO ()
