@@ -4,6 +4,7 @@ module Day13
 
 import Day
 import Data.Bits (popCount)
+import Data.List (nub)
 import Data.Tree (Tree)
 import qualified Data.Tree as T
 import Data.Set (Set)
@@ -32,11 +33,13 @@ positionTree startPos = T.unfoldTree unfolder (S.singleton startPos, [startPos])
           | next <- nextPositions cur
           , not (next `S.member` seen) ]
     unfolder _ = undefined
-    nextPositions (x, y) =
-      [ newpos
-      | newpos@(x', y') <- [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-      , x' >= 0 && y' >= 0
-      , isOpen newpos ]
+
+nextPositions :: Coord -> [Coord]
+nextPositions (x, y) =
+  [ newpos
+  | newpos@(x', y') <- [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+  , x' >= 0 && y' >= 0
+  , isOpen newpos ]
 
 showMap :: Int -> Int -> String
 showMap w h = unlines $ showRow <$> [0 .. h]
@@ -53,9 +56,15 @@ partA = length path - 1
       head $
       dropWhile ((/= (31, 39)) . head) $ concat $ T.levels $ positionTree (1, 1)
 
+partB =
+  length $
+  nub $
+  concat $
+  takeWhile ((<= 51) . length) $ concat $ T.levels $ positionTree (1, 1)
+
 day13 =
   Day
     13
     (many anyChar)
     (return . show . const partA)
-    (return . show . const "TODO")
+    (return . show . const partB)
