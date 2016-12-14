@@ -50,17 +50,11 @@ showMap w h = unlines $ showRow <$> [0 .. h]
          else '#'
       | x <- [0 .. w] ]
 
-partA = length path - 1
-  where
-    path =
-      head $
-      dropWhile ((/= (31, 39)) . head) $ concat $ T.levels $ positionTree (1, 1)
+paths = concat $ T.levels $ positionTree (1, 1)
 
-partB =
-  length $
-  nub $
-  concat $
-  takeWhile ((<= 51) . length) $ concat $ T.levels $ positionTree (1, 1)
+partA = length (head $ dropWhile ((/= (31, 39)) . head) paths) - 1
+
+partB = length $ nub $ concat $ takeWhile ((<= 51) . length) paths
 
 day13 =
   Day
