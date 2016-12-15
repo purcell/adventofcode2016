@@ -16,12 +16,10 @@ partA discs =
     | t <- [0 ..]
     , all
        (== 0)
-       [ slotOffsetAt (t + t') d
-       | (d, t') <- zip discs [1 ..] ] ]
+       [ pos + (t + t') `mod` size
+       | (Disc size pos, t') <- zip discs [1 ..] ] ]
 
-partB discs = partA (discs ++ [Disc 11 0])
-
-slotOffsetAt t (Disc size pos) = (pos + t) `mod` size
+partB = partA . (++ [Disc 11 0])
 
 exampleDiscs = [Disc 5 4, Disc 2 1]
 
