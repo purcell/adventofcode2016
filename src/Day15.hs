@@ -19,6 +19,8 @@ partA discs =
        [ slotOffsetAt (t + t') d
        | (d, t') <- zip discs [1 ..] ] ]
 
+partB discs = partA (discs ++ [Disc 11 0])
+
 slotOffsetAt t (Disc size pos) = (pos + t) `mod` size
 
 exampleDiscs = [Disc 5 4, Disc 2 1]
@@ -36,4 +38,4 @@ day15 =
     15
     (many1 (parseDisc <* newline))
     (return . show . partA)
-    (return . show . const "TODO")
+    (return . show . partB)
