@@ -6,7 +6,7 @@ import Day
 import qualified Crypto.Hash as H
 import Data.ByteString (ByteString)
 import Data.String (fromString)
-import Data.List (group, tails)
+import Data.List (isInfixOf, tails)
 import Control.Arrow ((&&&))
 
 hexMD5 :: String -> String
@@ -23,26 +23,17 @@ stretchHash salt n = iterate hexMD5 (salt ++ show n) !! 2017
 
 keys :: (Int -> String) -> [(Int, String)]
 keys hasher =
-  [ (n, h)
-  | ((n, h, triple, _), nexts) <- zip allTriples (tail (tails allTriples))
-  , any
-     (hasQuintuple triple)
-     (takeWhile (\(n', _, _, _) -> n' <= n + 1000) nexts) ]
-  where
-    allTriples :: [(Int, String, Char, String)]
-    allTriples =
-      [ (n, h, triple, quints)
-      | (n, h) <- (id &&& hasher) <$> [0 ..]
-      , let groups = bigGroups h
-      , not (null groups)
-      , let (triple, _) = head groups
-      , let quints = fst <$> filter ((>= 5) . snd) groups ]
-    hasQuintuple c (_, _, _, quints) = c `elem` quints
-
-bigGroups
-  :: Eq a
-  => [a] -> [(a, Int)]
-bigGroups = filter ((>= 3) . snd) . map (head &&& length) . group
+  let hs = (id &&& hasher) <$> [0 ..]
+  in [ (n, h)
+     | (n, h) <- hs
+     , c <-
+        take
+          1
+          [ x
+          | x:y:z:_ <- tails h
+          , x == y
+          , y == z ]
+     , any (replicate 5 c `isInfixOf`) (snd <$> hs) ]
 
 partA = (!! 63) . keys . hash
 
