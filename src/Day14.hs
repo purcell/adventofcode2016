@@ -13,34 +13,30 @@ hexMD5 = show . md5 . fromString
     md5 :: ByteString -> H.Digest H.MD5
     md5 = H.hash
 
-hash :: String -> Int -> String
-hash salt n = hexMD5 (salt ++ show n)
-
-stretchHash :: String -> Int -> String
-stretchHash salt n = iterate hexMD5 (salt ++ show n) !! 2017
+hash :: Int -> String -> Int -> String
+hash stretches salt n = iterate hexMD5 (salt ++ show n) !! stretches
 
 keys :: (Int -> String) -> [(Int, String)]
-keys hasher =
-  let hs = (id &&& hasher) <$> [0 ..]
-  in [ (n, h)
-     | (n, h) <- hs
-     , c <-
-        take
-          1
-          [ x
-          | x:y:z:_ <- tails h
-          , x == y
-          , y == z ]
-     , any (replicate 5 c `isInfixOf`) (snd <$> hs) ]
+keys hasher = go ((id &&& hasher) <$> [0 ..])
+  where
+    go (h@(n, s):hs) =
+      [ h
+      | c <-
+         take
+           1
+           [ x
+           | x:y:z:_ <- tails s
+           , x == y
+           , y == z ]
+      , any (replicate 5 c `isInfixOf`) (snd <$> take 1000 hs) ] ++
+      go hs
 
-partA = (!! 63) . keys . hash
-
-partB = (!! 63) . keys . stretchHash
+solve stretches = (!! 63) . keys . hash stretches
 
 main =
   runDay $
   Day
     14
     (many1 letter <* newline)
-    (return . show . partA)
-    (return . show . partB)
+    (return . show . solve 1)
+    (return . show . solve 2017)
