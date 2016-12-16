@@ -1,6 +1,4 @@
-module Day10
-  ( day10
-  ) where
+module Main where
 
 import Day
 import Data.Map (Map)
@@ -79,8 +77,8 @@ partB instrs =
   where
     outputs = flip evalState M.empty $ execWriterT (runInstrs instrs)
 
-day10 :: Day [Instr]
-day10 =
+main =
+  runDay $
   Day
     10
     (many1 (parseInstr <* newline))

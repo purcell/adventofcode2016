@@ -1,8 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Day1
-  ( day1
-  ) where
+module Main where
 
 import Day
 import qualified Data.Set as S
@@ -87,7 +85,9 @@ firstDuplicate = go S.empty
         then Just x
         else go (S.insert x seen) xs
 
-day1 =
+main :: IO ()
+main =
+  runDay $
   Day
     1
     (sepBy parseInstruction (string ", ") <* newline)

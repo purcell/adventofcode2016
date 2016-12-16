@@ -1,6 +1,4 @@
-module Day16
-  ( day16
-  ) where
+module Main where
 
 import Day
 
@@ -28,7 +26,8 @@ checksum xs = head $ dropWhile (even . length) $ iterate go xs
       go (drop 2 ys)
     go _ = []
 
-day16 =
+main =
+  runDay $
   Day
     16
     (many (oneOf "01") <* newline)

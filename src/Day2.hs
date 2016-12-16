@@ -1,6 +1,4 @@
-module Day2
-  ( day2
-  ) where
+module Main where
 
 import Day
 import qualified Data.Map as M
@@ -57,7 +55,8 @@ parseDirection =
   string "U" *> return U <|> string "D" *> return D <|> string "L" *> return L <|>
   string "R" *> return R
 
-day2 =
+main =
+  runDay $
   Day
     2
     (many1 (many1 parseDirection <* newline))

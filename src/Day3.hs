@@ -1,6 +1,4 @@
-module Day3
-  ( day3
-  ) where
+module Main where
 
 import Day
 import Data.List (transpose, splitAt)
@@ -32,7 +30,8 @@ groupsOf = go []
 
 toTriangle [a, b, c] = Triangle a b c
 
-day3 =
+main =
+  runDay $
   Day
     3
     (many1 (count 3 spaceNumber <* newline))

@@ -1,6 +1,4 @@
-module Day14
-  ( day14
-  ) where
+module Main where
 
 import Day
 import qualified Crypto.Hash as H
@@ -39,7 +37,8 @@ partA = (!! 63) . keys . hash
 
 partB = (!! 63) . keys . stretchHash
 
-day14 =
+main =
+  runDay $
   Day
     14
     (many1 letter <* newline)

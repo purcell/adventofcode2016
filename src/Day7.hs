@@ -1,8 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Day7
-  ( day7
-  ) where
+module Main where
 
 import Day
 import Data.List (partition, isInfixOf)
@@ -51,7 +49,8 @@ parseIPAddress =
     (((Super, ) <$> many1 letter) <|>
      ((Hyper, ) <$> (string "[" *> many1 letter <* string "]")))
 
-day7 =
+main =
+  runDay $
   Day
     7
     (many1 (parseIPAddress <* newline))

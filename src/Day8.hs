@@ -1,6 +1,4 @@
-module Day8
-  ( day8
-  ) where
+module Main where
 
 import Day
 import Data.Set (Set)
@@ -80,7 +78,8 @@ parseInstruction =
 run :: [Instruction] -> Screen
 run = foldl applyInstruction initialScreen
 
-day8 =
+main =
+  runDay $
   Day
     8
     (many1 (parseInstruction <* newline))

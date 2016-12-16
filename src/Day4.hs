@@ -1,6 +1,4 @@
-module Day4
-  ( day4
-  ) where
+module Main where
 
 import Day
 import Data.List (group, sort, sortBy)
@@ -40,7 +38,8 @@ parseRoom =
   where
     parseInt = read <$> many1 digit
 
-day4 =
+main =
+  runDay $
   Day
     4
     (many1 (parseRoom <* newline))

@@ -1,7 +1,5 @@
-module Day11 where
+module Main where
 
--- ( day11
--- )
 import Day
 import Data.List (subsequences)
 import Data.Tree (Tree)
@@ -113,4 +111,5 @@ partA _ =
         | (Chip _) <- concatMap S.elems $ take 3 floors ]
     complete _ = False
 
-day11 = Day 11 (many anyChar) (return . show . partA) (return . const "TODO")
+main =
+  runDay $ Day 11 (many anyChar) (return . show . partA) (return . const "TODO")

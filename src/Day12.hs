@@ -1,6 +1,4 @@
-module Day12
-  ( day12
-  ) where
+module Main where
 
 import Day
 import Control.Monad.State
@@ -101,7 +99,8 @@ partA = finalA M.empty
 
 partB = finalA (M.singleton 'c' 1)
 
-day12 =
+main =
+  runDay $
   Day
     12
     (many (parseInstr <* newline))

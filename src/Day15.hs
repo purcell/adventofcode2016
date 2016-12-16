@@ -1,6 +1,4 @@
-module Day15
-  ( day15
-  ) where
+module Main where
 
 import Day
 
@@ -31,7 +29,8 @@ parseDisc =
   where
     number = read <$> many1 digit
 
-day15 =
+main =
+  runDay $
   Day
     15
     (many1 (parseDisc <* newline))

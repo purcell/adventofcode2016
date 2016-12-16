@@ -1,6 +1,4 @@
-module Day6
-  ( day6
-  ) where
+module Main where
 
 import Day
 import Data.List (sort, group, transpose)
@@ -17,7 +15,8 @@ decodeMostFrequent = decode maximum
 decodeLeastFrequent :: [String] -> String
 decodeLeastFrequent = decode minimum
 
-day6 =
+main =
+  runDay $
   Day
     6
     (many1 (many1 letter <* newline))

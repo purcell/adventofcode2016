@@ -1,6 +1,4 @@
-module Day9
-  ( day9
-  ) where
+module Main where
 
 import Day
 
@@ -31,7 +29,8 @@ parseBlock = try parseRepeat <|> (Plain <$> many1 letter)
         Left err -> fail (show err)
     number = read <$> many1 digit
 
-day9 =
+main =
+  runDay $
   Day
     9
     (many1 parseBlock <* newline)

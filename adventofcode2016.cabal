@@ -5,7 +5,7 @@ description:         Please see README.md
 homepage:            https://github.com/purcell/adventofcode2016#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Steve PUrcell
+author:              Steve Purcell
 maintainer:          steved@sanityinc.com
 copyright:           2016 Steve Purcell
 category:            Other
@@ -15,38 +15,170 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
-  other-modules:       Day
-                     , Day1
-                     , Day2
-                     , Day3
-                     , Day4
-                     , Day5
-                     , Day6
-                     , Day7
-                     , Day8
-                     , Day9
-                     , Day10
-                     , Day11
-                     , Day12
-                     , Day13
-                     , Day14
-                     , Day15
-                     , Day16
+  exposed-modules:     Day
   build-depends:       base >= 4.7 && < 5
-                     , containers >= 0.5
                      , mtl >= 2.2.1
                      , parsec >= 3
                      , cryptonite >= 0.19
                      , bytestring >= 0.10
   default-language:    Haskell2010
 
-executable adventofcode2016
-  hs-source-dirs:      app
-  main-is:             Main.hs
+executable Day1
+  hs-source-dirs:      src
+  main-is:             Day1.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
   build-depends:       base
                      , adventofcode2016
+                     , parsec
+                     , containers
+  default-language:    Haskell2010
+
+executable Day2
+  hs-source-dirs:      src
+  main-is:             Day2.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+                     , containers
+  default-language:    Haskell2010
+
+executable Day3
+  hs-source-dirs:      src
+  main-is:             Day3.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+  default-language:    Haskell2010
+
+executable Day4
+  hs-source-dirs:      src
+  main-is:             Day4.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+  default-language:    Haskell2010
+
+executable Day5
+  hs-source-dirs:      src
+  main-is:             Day5.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+                     , containers
+                     , cryptonite
+                     , bytestring
+  default-language:    Haskell2010
+
+executable Day6
+  hs-source-dirs:      src
+  main-is:             Day6.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+  default-language:    Haskell2010
+
+executable Day7
+  hs-source-dirs:      src
+  main-is:             Day7.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+  default-language:    Haskell2010
+
+executable Day8
+  hs-source-dirs:      src
+  main-is:             Day8.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+                     , containers
+  default-language:    Haskell2010
+
+executable Day9
+  hs-source-dirs:      src
+  main-is:             Day9.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+  default-language:    Haskell2010
+
+executable Day10
+  hs-source-dirs:      src
+  main-is:             Day10.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+                     , containers
+                     , mtl
+  default-language:    Haskell2010
+
+executable Day11
+  hs-source-dirs:      src
+  main-is:             Day11.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+                     , containers
+  default-language:    Haskell2010
+
+executable Day12
+  hs-source-dirs:      src
+  main-is:             Day12.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+                     , containers
+                     , mtl
+  default-language:    Haskell2010
+
+executable Day13
+  hs-source-dirs:      src
+  main-is:             Day13.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+                     , containers
+  default-language:    Haskell2010
+
+executable Day14
+  hs-source-dirs:      src
+  main-is:             Day14.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+                     , cryptonite
+                     , bytestring
+  default-language:    Haskell2010
+
+executable Day15
+  hs-source-dirs:      src
+  main-is:             Day15.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
+  default-language:    Haskell2010
+
+executable Day16
+  hs-source-dirs:      src
+  main-is:             Day15.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -O2
+  build-depends:       base
+                     , adventofcode2016
+                     , parsec
   default-language:    Haskell2010
 
 source-repository head

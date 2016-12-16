@@ -1,6 +1,4 @@
-module Day13
-  ( day13
-  ) where
+module Main where
 
 import Day
 import Data.Bits (popCount)
@@ -56,7 +54,8 @@ partA = length (head $ dropWhile ((/= (31, 39)) . head) paths) - 1
 
 partB = length $ nub $ concat $ takeWhile ((<= 51) . length) paths
 
-day13 =
+main =
+  runDay $
   Day
     13
     (many anyChar)

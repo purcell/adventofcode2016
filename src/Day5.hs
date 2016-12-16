@@ -1,6 +1,4 @@
-module Day5
-  ( day5
-  ) where
+module Main where
 
 import Day
 import Crypto.Hash
@@ -40,7 +38,8 @@ solutionB hs = M.elems $ head $ dropWhile incomplete $ scanl addPair M.empty pai
       | p >= '0' && p < '8' = Just (p, c)
     posAndChar _ = Nothing
 
-day5 =
+main =
+  runDay $
   Day
     5
     (many1 letter <* newline)
