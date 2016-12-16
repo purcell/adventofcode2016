@@ -30,4 +30,4 @@ day16 =
     16
     (many (oneOf "01") <* newline)
     (return . show . fill 272)
-    (return . show . const "TODO")
+    (return . show . fill 35651584)
