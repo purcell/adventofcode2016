@@ -21,7 +21,11 @@ next tiles =
     tripleToNext [Safe, Safe, Trap] = Trap
     tripleToNext _ = Safe
 
-partA = length . filter (== Safe) . concat . take 40 . iterate next
+safeInRows n = length . filter (== Safe) . concat . take n . iterate next
+
+partA = safeInRows 40
+
+partB = safeInRows 400000
 
 parseTile = (char '.' *> return Safe) <|> (char '^' *> return Trap)
 
@@ -31,4 +35,4 @@ main =
     18
     (many1 parseTile <* newline)
     (return . show . partA)
-    (return . const "TODO")
+    (return . show . partB)
