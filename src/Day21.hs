@@ -21,13 +21,12 @@ data Instr
          Int
 
 apply :: String -> Instr -> String
-apply s (SwapPos x y) = map swap $ zip [0 ..] s
+apply s (SwapPos x y) = zipWith swap [0 ..] s
   where
-    swap (n, _)
+    swap n c
       | n == x = s !! y
-    swap (n, _)
       | n == y = s !! x
-    swap (_, c) = c
+      | otherwise = c
 apply s (SwapLetters a b) = map replacement s
   where
     replacement c
@@ -36,7 +35,7 @@ apply s (SwapLetters a b) = map replacement s
       | otherwise = c
 apply s (Rotate DirLeft n) = take (length s) $ drop (n `mod` length s) (cycle s)
 apply s (Rotate DirRight n) =
-  take (length s) $ drop (length s - (n `mod` length s)) (cycle s) -- TODO
+  take (length s) $ drop (length s - (n `mod` length s)) (cycle s)
 apply s (RotatePosition c) =
   apply
     s
@@ -62,12 +61,27 @@ apply s (Move x y) =
         | (n, c) <- zip [0 ..] s
         , n /= x ]
       (before, after) = splitAt y withoutx
-  in before ++ [(s !! x)] ++ after
+  in before ++ [s !! x] ++ after
 
--- let c = s !! x
--- in take x s ++ drop x + 1 s
+unapply :: String -> Instr -> String
+unapply s (Rotate DirRight n) = apply s $ Rotate DirLeft n
+unapply s (Rotate DirLeft n) = apply s $ Rotate DirRight n
+unapply s (SwapPos a b) = apply s $ SwapPos b a
+unapply s (SwapLetters a b) = apply s $ SwapLetters b a
+unapply s r@(RotatePosition _) =
+  head
+    [ s'
+    | n <- [0 .. (length s)]
+    , let s' = apply s (Rotate DirLeft n)
+    , apply s' r == s ]
+unapply s r@(Reverse _ _) = apply s r
+unapply s (Move a b) = apply s $ Move b a
+
 partA :: [Instr] -> String
 partA = foldl apply "abcdefgh"
+
+partB :: [Instr] -> String
+partB = foldl unapply "fbgdceah" . reverse
 
 parseInstr :: Parser Instr
 parseInstr =
@@ -77,7 +91,9 @@ parseInstr =
   try
     (SwapLetters <$> (string "swap letter " *> anyChar) <*>
      (string " with letter " *> anyChar)) <|>
-  try (Rotate <$> (string "rotate " *> direction) <*> (string " " *> step)) <|>
+  try
+    (Rotate <$> (string "rotate " *> direction) <*>
+     (string " " *> num <* string " step" <* optional (char 's'))) <|>
   try
     (RotatePosition <$>
      (string "rotate based on position of letter " *> anyChar)) <|>
@@ -89,10 +105,9 @@ parseInstr =
      (string " to position " *> num))
   where
     num = read <$> many1 digit
-    step = num <* (string " step" >> optional (char 's'))
     direction =
       (string "left" *> pure DirLeft) <|> (string "right" *> pure DirRight)
 
 main =
   runDay $
-  Day 21 (many1 (parseInstr <* newline)) (return . partA) (return . const "FOO")
+  Day 21 (many1 (parseInstr <* newline)) (return . partA) (return . partB)
