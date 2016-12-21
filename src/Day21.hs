@@ -1,7 +1,11 @@
 module Main where
 
 import Day
-import Data.List (elemIndex)
+import Data.Foldable (toList)
+import Data.Monoid ((<>))
+import Data.Maybe (fromMaybe)
+import Data.Sequence (Seq)
+import qualified Data.Sequence as S
 
 data Direction
   = DirLeft
@@ -20,50 +24,39 @@ data Instr
   | Move Int
          Int
 
-apply :: String -> Instr -> String
-apply s (SwapPos x y) = zipWith swap [0 ..] s
-  where
-    swap n c
-      | n == x = s !! y
-      | n == y = s !! x
-      | otherwise = c
-apply s (SwapLetters a b) = map replacement s
+type Password = Seq Char
+
+apply :: Password -> Instr -> Password
+apply s (SwapPos x y) =
+  S.update x (s `S.index` y) (S.update y (s `S.index` x) s)
+apply s (SwapLetters a b) = replacement <$> s
   where
     replacement c
       | c == a = b
       | c == b = a
       | otherwise = c
-apply s (Rotate DirLeft n) = take (length s) $ drop (n `mod` length s) (cycle s)
-apply s (Rotate DirRight n) =
-  take (length s) $ drop (length s - (n `mod` length s)) (cycle s)
-apply s (RotatePosition c) =
-  apply
-    s
-    (Rotate
-       DirRight
-       (1 + nc +
-        (if nc >= 4
-           then 1
-           else 0)))
+apply s (Rotate DirLeft n) =
+  uncurry (flip (<>)) (S.splitAt (n `mod` S.length s) s)
+apply s (Rotate DirRight n) = apply s (Rotate DirLeft (S.length s - n))
+apply s (RotatePosition c) = apply s (Rotate DirRight off)
   where
-    nc =
-      case c `elemIndex` s of
-        Just x -> x
-        _ -> error "no such char"
+    off =
+      1 + nc +
+      (if nc >= 4
+         then 1
+         else 0)
+    nc = fromMaybe (error "no such char") $ c `S.elemIndexL` s
 apply s (Reverse x y)
   | y >= x =
-    let (pre, rest) = splitAt x s
-        (middle, end) = splitAt (y - x + 1) rest
-    in pre ++ reverse middle ++ end
-apply s (Move x y) =
-  let withoutx =
-        [ c
-        | (n, c) <- zip [0 ..] s
-        , n /= x ]
-      (before, after) = splitAt y withoutx
-  in before ++ [s !! x] ++ after
+    let (pre, rest) = S.splitAt x s
+        (middle, end) = S.splitAt (y - x + 1) rest
+    in pre <> S.reverse middle <> end
+apply s (Move x y) = beforeY <> S.take 1 fromX <> fromY
+  where
+    (beforeX, fromX) = S.splitAt x s
+    (beforeY, fromY) = S.splitAt y (beforeX <> S.drop 1 fromX)
 
-unapply :: String -> Instr -> String
+unapply :: Password -> Instr -> Password
 unapply s (Rotate DirRight n) = apply s $ Rotate DirLeft n
 unapply s (Rotate DirLeft n) = apply s $ Rotate DirRight n
 unapply s (SwapPos a b) = apply s $ SwapPos b a
@@ -78,10 +71,10 @@ unapply s r@(Reverse _ _) = apply s r
 unapply s (Move a b) = apply s $ Move b a
 
 partA :: [Instr] -> String
-partA = foldl apply "abcdefgh"
+partA = toList . foldl apply (S.fromList "abcdefgh")
 
 partB :: [Instr] -> String
-partB = foldl unapply "fbgdceah" . reverse
+partB = toList . foldl unapply (S.fromList "fbgdceah") . reverse
 
 parseInstr :: Parser Instr
 parseInstr =

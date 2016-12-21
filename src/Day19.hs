@@ -2,7 +2,6 @@ module Main where
 
 import Day
 import Data.Sequence (Seq)
-import Data.List (find)
 import qualified Data.Sequence as S
 
 elves :: (Seq Elf -> Seq Elf) -> Int -> Elf
@@ -25,7 +24,7 @@ data Elf = Elf
   { eNum :: !Int
   } deriving (Show)
 
-makeElves n = Elf <$> (S.iterateN n (+ 1) 1)
+makeElves n = Elf <$> S.iterateN n (+ 1) 1
 
 main =
   runDay $
