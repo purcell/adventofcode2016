@@ -86,15 +86,12 @@ parseGrid = makeGrid <$> many1 (many1 square <* newline)
 main :: IO ()
 main = runDay day24
 
-partA :: Grid -> ([(Int, Pos)], Int)
-partA g =
-  minimumBy
-    (compare `on` snd)
-    [ (gs, distance gs)
-    | rest <- permutations (drop 1 goals)
-    , let gs = take 1 goals ++ rest ]
+shortestVariation :: Grid
+                  -> ([(Int, Pos)] -> [[(Int, Pos)]])
+                  -> ([(Int, Pos)], Int)
+shortestVariation g goalVariations =
+  minimumBy (compare `on` snd) ((id &&& distance) <$> goalVariations goals)
   where
-    distance :: [(Int, Pos)] -> Int
     distance gs = sum ((fromJust . (`lookup` distances)) <$> zip gs (drop 1 gs))
     goals = gGoals g
     distances =
@@ -104,5 +101,18 @@ partA g =
       , start /= dest
       , let Just path = shortestPathFrom g (snd start) (snd dest) ]
 
+partA :: Grid -> ([(Int, Pos)], Int)
+partA g = shortestVariation g makePaths
+  where
+    makePaths goals = (take 1 goals ++) <$> permutations (drop 1 goals)
+
+partB :: Grid -> ([(Int, Pos)], Int)
+partB g = shortestVariation g makePaths
+  where
+    makePaths goals =
+      (\middle -> first <> middle <> first) <$> permutations (drop 1 goals)
+      where
+        first = take 1 goals
+
 day24 :: Day Grid
-day24 = Day 24 parseGrid (return . show . partA) (return . const "TODO")
+day24 = Day 24 parseGrid (return . show . partA) (return . show . partB)
