@@ -1,115 +1,182 @@
 module Main where
 
 import Day
-import Data.List (subsequences)
-import Data.Tree (Tree)
-import qualified Data.Tree as T
-import Data.Set (Set)
 import qualified Data.Set as S
-import Control.Monad
+import Data.List (intercalate, find, sort, tails)
+import Data.Monoid ((<>))
+
+data Building =
+  Building !Int
+           ![(Item, Int)]
+  deriving (Eq, Ord)
+
+data Direction
+  = Up
+  | Down
+  deriving (Eq, Ord, Show)
+
+data ItemType
+  = Generator
+  | Microchip
+  deriving (Eq, Ord)
 
 data Element
-  = Polonium
-  | Thulium
+  = Thulium
+  | Polonium
   | Promethium
   | Ruthenium
   | Cobalt
+  | Hydrogen
+  | Lithium
   deriving (Eq, Ord, Show)
 
-data Item
-  = Generator Element
-  | Chip Element
-  deriving (Eq, Ord, Show)
+data Item =
+  Item !ItemType
+       !Element
+  deriving (Eq)
 
-safeTogether :: Set Item -> Bool
-safeTogether items =
-  all
-    safeChip
-    [ n
-    | (Chip n) <- S.elems items ]
+instance Ord Item where
+  compare (Item t1 e1) (Item t2 e2) = compare (e1, t1) (e2, t2)
+
+data Step =
+  Step !Direction
+       ![Item]
+  deriving (Show)
+
+instance Show Building where
+  show (Building level items) = unlines (showlevel <$> reverse [0 .. 3])
+    where
+      showlevel n =
+        show (n + 1) ++
+        (if n == level
+           then " > "
+           else "   ") ++
+        intercalate
+          "  "
+          [ show i
+          | (i, f) <- sort items
+          , f == n ]
+
+instance Show Item where
+  show (Item Generator e) = "G-" ++ show e
+  show (Item Microchip e) = "M-" ++ show e
+
+bfsOn
+  :: Ord b
+  => (a -> b) -> (a -> [a]) -> a -> [a]
+bfsOn rep next start = go S.empty [start] []
   where
-    safeChip n =
-      Generator n `S.member` items ||
-      null
-        [ n'
-        | (Generator n') <- S.elems items
-        , n' /= n ]
+    go _ [] [] = []
+    go seen [] ys = go seen (reverse ys) []
+    go seen (x:xs) ys
+      | rep x `S.member` seen = go seen xs ys
+      | otherwise = x : go (rep x `S.insert` seen) xs (next x ++ ys)
 
-data State = State
-  { sLevel :: Int
-  , sFloors :: [Set Item]
-  } deriving (Eq, Ord, Show)
+bestFrom :: Building -> Maybe (Building, [Step])
+bestFrom b = find (complete . fst) (bfsOn fst nexts (b, []))
 
-initialFloors =
-  S.fromList <$>
-  [ [ Generator Polonium
-    , Generator Thulium
-    , Chip Thulium
-    , Generator Promethium
-    , Generator Ruthenium
-    , Chip Ruthenium
-    , Generator Cobalt
-    , Chip Cobalt
-    ]
-  , [Chip Polonium, Chip Promethium]
-  , []
-  , []
-  ]
+complete :: Building -> Bool
+complete (Building _ items) = all ((== 3) . snd) items
 
-initialState = State 0 initialFloors
-
-unfoldFloors :: Tree [State]
-unfoldFloors = T.unfoldTree unfolder (S.singleton initialState, [initialState])
+isSafe :: Building -> Bool
+isSafe (Building _ floors) = all chipIsSafeOnFloor chips
   where
-    unfolder (seen, states) =
-      ( states
-      , [ (newSeen, next : states)
-        | next <- nexts ])
+    chips =
+      [ (el, fl)
+      | (Item Microchip el, fl) <- floors ]
+    chipIsSafeOnFloor (el, chipFloor) = null gensHere || el `elem` gensHere
       where
-        nexts = filter (not . (`S.member` seen)) $ nextStates (head states)
-        newSeen = S.union seen (S.fromList nexts)
+        gensHere =
+          [ el'
+          | (Item Generator el', f) <- floors
+          , f == chipFloor ]
 
-nextStates :: State -> [State]
-nextStates (State level floors) = do
-  newLevel <- [level + 1, level - 1]
-  guard $ newLevel >= 0 && newLevel < length floors
-  guard $ newLevel > level || not (S.null (floors !! newLevel))
-  load <- safeLoads (floors !! level) -- TODO: only choose one gen/chip pair
-  case moveIfSafe floors load level newLevel of
-    Just newFloors -> return $ State newLevel newFloors
-    Nothing -> mempty
-
-moveIfSafe :: [Set Item] -> Set Item -> Int -> Int -> Maybe [Set Item]
-moveIfSafe floors load level newLevel = do
-  let oldLevelItems = (floors !! level) `S.difference` load
-      newLevelItems = (floors !! newLevel) `S.union` load
-  guard $ safeTogether oldLevelItems
-  guard $ safeTogether newLevelItems
-  return
-    [ if n == level
-       then oldLevelItems
-       else if n == newLevel
-              then newLevelItems
-              else fl
-    | (n, fl) <- zip [0 ..] floors ]
-
-safeLoads :: Set Item -> [Set Item]
-safeLoads fl =
-  [ group
-  | group <-
-     drop 1 $
-     fmap S.fromList $ takeWhile ((<= 2) . length) $ subsequences $ S.elems fl
-  , safeTogether group ]
-
-partA _ =
-  steps $ head $ dropWhile (not . complete . head) $ concat $ T.levels $ unfoldFloors
+runStep :: Building -> Step -> Building
+runStep (Building level floors) (Step dir items) = Building level' floors'
   where
-    steps states = length states - 1
-    complete (State 3 floors) =
-      null
-        [ True
-        | (Chip _) <- concatMap S.elems $ take 3 floors ]
-    complete _ = False
+    level' =
+      if dir == Up
+        then level + 1
+        else level - 1
+    floors' = maybeMove <$> floors
+    maybeMove (i, f) =
+      if i `elem` items
+        then (i, level')
+        else (i, f)
 
+nexts :: (Building, [Step]) -> [(Building, [Step])]
+nexts (bldg, steps) =
+  [ (bldg', steps ++ [s])
+  | s <- possibleSteps bldg
+  , let bldg' = runStep bldg s
+  , isSafe bldg' ]
+
+possibleSteps :: Building -> [Step]
+possibleSteps (Building level floors) =
+  Step <$> validDirections <*> onesOrTwos currentItems
+  where
+    validDirections =
+      (if level < 3
+         then pure Up
+         else mempty) <>
+      (if level > 0
+         then pure Down
+         else mempty)
+    currentItems =
+      [ i
+      | (i, n) <- floors
+      , n == level ]
+
+onesOrTwos :: [a] -> [[a]]
+onesOrTwos xs =
+  [ [x, y]
+  | x:ys <- tails xs
+  , y <- ys ] <>
+  map pure xs
+
+exampleBuilding :: Building
+exampleBuilding =
+  Building
+    0
+    [ (Item Microchip Hydrogen, 0)
+    , (Item Microchip Lithium, 0)
+    , (Item Generator Hydrogen, 1)
+    , (Item Generator Lithium, 2)
+    ]
+
+buildingA :: Building
+buildingA =
+  Building
+    0
+    [ (Item Generator Polonium, 0)
+    , (Item Generator Thulium, 0)
+    , (Item Microchip Thulium, 0)
+    , (Item Generator Promethium, 0)
+    , (Item Generator Ruthenium, 0)
+    , (Item Microchip Ruthenium, 0)
+    , (Item Generator Cobalt, 0)
+    , (Item Microchip Cobalt, 0)
+    , (Item Microchip Polonium, 1)
+    , (Item Microchip Promethium, 1)
+    ]
+
+partA :: Building -> Maybe Int
+partA = fmap (length . snd) . bestFrom
+
+test :: Building -> IO ()
+test b = putStrLn $ unlines $ concatMap (\(b', s) -> [b', "", s, ""]) stages
+  where
+    stages = zip ("" : numberedSteps) (show <$> scanl runStep b steps)
+    Just (_, steps) = bestFrom b
+    numberedSteps =
+      [ show n ++ ": " ++ show s
+      | (n, s) <- zip [(1 :: Int) ..] steps ]
+
+main :: IO ()
 main =
-  runDay $ Day 11 (many anyChar) (return . show . partA) (return . const "TODO")
+  runDay $
+  Day
+    11
+    (many anyChar *> pure buildingA)
+    (return . show . partA)
+    (return . const "TODO")
