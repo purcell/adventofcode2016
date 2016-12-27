@@ -2,13 +2,14 @@ module Main where
 
 import Day
 import qualified Data.Set as S
-import Data.List (intercalate, find, sort, tails)
+import Data.List (intercalate, find, sort, tails, groupBy)
 import Data.Monoid ((<>))
+import Data.Function (on)
 
-data Building =
-  Building !Int
-           ![(Item, Int)]
-  deriving (Eq, Ord)
+data Building = Building
+  { bLevel :: !Int
+  , bItems :: ![(Item, Int)]
+  } deriving (Eq, Ord)
 
 data Direction
   = Up
@@ -28,12 +29,14 @@ data Element
   | Cobalt
   | Hydrogen
   | Lithium
+  | Elerium
+  | Dilithium
   deriving (Eq, Ord, Show)
 
-data Item =
-  Item !ItemType
-       !Element
-  deriving (Eq)
+data Item = Item
+  { iType :: !ItemType
+  , iElement :: !Element
+  } deriving (Eq)
 
 instance Ord Item where
   compare (Item t1 e1) (Item t2 e2) = compare (e1, t1) (e2, t2)
@@ -72,8 +75,13 @@ bfsOn rep next start = go S.empty [start] []
       | rep x `S.member` seen = go seen xs ys
       | otherwise = x : go (rep x `S.insert` seen) xs (next x ++ ys)
 
+fingerprint :: Building -> (Int, [[Int]])
+fingerprint (Building level items) = (level, sort pairFloors)
+  where
+    pairFloors = fmap snd <$> groupBy ((==) `on` iElement . fst) (sort items)
+
 bestFrom :: Building -> Maybe (Building, [Step])
-bestFrom b = find (complete . fst) (bfsOn fst nexts (b, []))
+bestFrom b = find (complete . fst) (bfsOn (fingerprint . fst) nexts (b, []))
 
 complete :: Building -> Bool
 complete (Building _ items) = all ((== 3) . snd) items
@@ -160,8 +168,20 @@ buildingA =
     , (Item Microchip Promethium, 1)
     ]
 
-partA :: Building -> Maybe Int
-partA = fmap (length . snd) . bestFrom
+buildingB :: Building
+buildingB =
+  buildingA
+  { bItems =
+    bItems buildingA ++
+    [ (Item Generator Elerium, 0)
+    , (Item Microchip Elerium, 0)
+    , (Item Generator Dilithium, 0)
+    , (Item Microchip Dilithium, 0)
+    ]
+  }
+
+solve :: Building -> Maybe Int
+solve = fmap (length . snd) . bestFrom
 
 test :: Building -> IO ()
 test b = putStrLn $ unlines $ concatMap (\(b', s) -> [b', "", s, ""]) stages
@@ -177,6 +197,6 @@ main =
   runDay $
   Day
     11
-    (many anyChar *> pure buildingA)
-    (return . show . partA)
-    (return . const "TODO")
+    (many anyChar)
+    (return . show . const (solve buildingA))
+    (return . show . const (solve buildingB))
