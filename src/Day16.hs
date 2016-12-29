@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 
 expandData :: String -> String
 expandData a = a ++ "0" ++ (dNot <$> reverse a)

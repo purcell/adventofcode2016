@@ -2,7 +2,7 @@
 
 module Main where
 
-import Day
+import AdventOfCode
 import qualified Data.Set as S
 
 data TurnDirection

@@ -2,7 +2,7 @@
 
 module Main where
 
-import Day
+import AdventOfCode
 import Data.List (sort)
 
 type IPRange = (Integer, Integer)

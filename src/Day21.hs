@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import Data.Foldable (toList)
 import Data.Monoid ((<>))
 import Data.Maybe (fromMaybe)

@@ -1,12 +1,14 @@
-module Day
+module AdventOfCode
   ( loadDay
   , runDay
   , Day(..)
   , module P
+  , module S
   ) where
 
 import Text.Parsec as P hiding (State)
 import Text.Parsec.String as P
+import Search as S
 import System.Environment (getArgs)
 import Control.Monad (when)
 

@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import Data.List (sort, group, transpose)
 import Control.Arrow ((&&&))
 

@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import Data.Sequence (Seq)
 import qualified Data.Sequence as S
 

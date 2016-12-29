@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import Data.Map (Map)
 import qualified Data.Map as M
 import Control.Monad.State

@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 

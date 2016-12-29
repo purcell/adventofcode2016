@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import Data.List (group, sort, sortBy)
 
 data Room = Room

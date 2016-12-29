@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import Debug.Trace
 import Data.List (delete, groupBy, sortBy, find)
 import qualified Data.Set as S

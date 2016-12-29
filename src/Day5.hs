@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import Crypto.Hash
 import Data.ByteString (ByteString)
 import qualified Data.Map as M

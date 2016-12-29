@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 
 data Disc = Disc
   { dSize :: Int

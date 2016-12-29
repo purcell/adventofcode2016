@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import qualified Data.Set as S
 import Data.List (intercalate, find, sort, tails, groupBy)
 import Data.Monoid ((<>))
@@ -63,17 +63,6 @@ instance Show Building where
 instance Show Item where
   show (Item Generator e) = "G-" ++ show e
   show (Item Microchip e) = "M-" ++ show e
-
-bfsOn
-  :: Ord b
-  => (a -> b) -> (a -> [a]) -> a -> [a]
-bfsOn rep next start = go S.empty [start] []
-  where
-    go _ [] [] = []
-    go seen [] ys = go seen (reverse ys) []
-    go seen (x:xs) ys
-      | rep x `S.member` seen = go seen xs ys
-      | otherwise = x : go (rep x `S.insert` seen) xs (next x ++ ys)
 
 fingerprint :: Building -> (Int, [[Int]])
 fingerprint (Building level items) = (level, sort pairFloors)

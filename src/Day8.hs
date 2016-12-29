@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import Data.Set (Set)
 import qualified Data.Set as S
 

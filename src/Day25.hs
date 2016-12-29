@@ -1,6 +1,6 @@
 module Main where
 
-import Day
+import AdventOfCode
 import Control.Monad.State
 import Data.Maybe (fromMaybe)
 import Data.Map (Map)
