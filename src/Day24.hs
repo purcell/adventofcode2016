@@ -1,16 +1,13 @@
 module Main where
 
 import AdventOfCode
-import Data.Sequence (Seq)
-import qualified Data.Sequence as Sq
 import Data.Monoid ((<>))
 import Control.Monad (guard)
 import Data.Map (Map)
 import qualified Data.Map as M
-import qualified Data.Set as S
 import Data.Maybe (fromJust)
 import Data.Function (on)
-import Data.List (sort, permutations, minimumBy)
+import Data.List (find, sort, permutations, minimumBy)
 import Control.Arrow ((&&&))
 
 data Pos = Pos
@@ -35,26 +32,22 @@ goalPos g n = lookup n (gGoals g)
 goalPositions :: Grid -> [Pos]
 goalPositions = map snd . gGoals
 
-type Path = Seq Pos
+type Path = [Pos]
 
 squareAt :: Grid -> Pos -> Maybe Square
 squareAt g p = p `M.lookup` gSquares g
 
+manhattanDist :: Pos -> Pos -> Int
+manhattanDist p1 p2 = abs (px p2 - px p1) + abs (py p2 - py p1)
+
 shortestPathFrom :: Grid -> Pos -> Pos -> Maybe Path
 shortestPathFrom g start dest =
-  go (S.singleton start) ((Sq.singleton . Sq.singleton) start)
+  fst <$> find ((dest ==) . head . fst) (astarOn head nexts [start])
   where
-    go _ s
-      | Sq.null s = Nothing
-    go seen ps =
-      let path = Sq.index ps 0
-          curpos = Sq.index path 0
-          rest = Sq.drop 1 ps
-          nexts = filter (not . (`S.member` seen)) (openNeighbours g curpos)
-          newPaths = (Sq.<| path) <$> Sq.fromList nexts
-      in if dest == curpos
-           then Just path
-           else go (seen `S.union` S.fromList nexts) (rest <> newPaths)
+    nexts path@(x:_) =
+      [ (n : path, 1, manhattanDist n dest)
+      | n <- openNeighbours g x ]
+    nexts _ = error "empty path"
 
 openNeighbours :: Grid -> Pos -> [Pos]
 openNeighbours g (Pos x y) = do
