@@ -1,14 +1,18 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Main where
 
 import AdventOfCode
 import Control.Monad.State
-import Data.Maybe (fromMaybe)
-import Data.Map (Map)
 import Data.Foldable (toList)
 import Data.List (find)
+import Data.Map (Map)
 import qualified Data.Map as M
+import Data.Maybe (fromMaybe)
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Sq
+import qualified Data.Vector as V
+import Data.Vector (Vector)
 
 newtype Reg =
   Reg Char
@@ -56,16 +60,18 @@ parseInstr =
 data SimState = SimState
   { stPos :: Int
   , stRegs :: Map Char Int
-  , stInstrs :: Seq Instr
+  , stInstrs :: Vector Instr
   , stOutput :: Seq Int
   , stFinished :: SimState -> Bool
   }
 
 instance Show SimState where
   show (SimState pos regs instrs output _) =
-    unlines (show regs : show output : toList (Sq.mapWithIndex showins instrs))
+    unlines
+      (show regs :
+       show output : toList (V.map showins (V.zip (V.fromList [1 ..]) instrs)))
     where
-      showins n i =
+      showins (n, i) =
         show n ++
         (if n == pos
            then ">> "
@@ -81,38 +87,21 @@ run = do
 
 runNext :: Sim Bool
 runNext = do
-  pos <- gets stPos
-  finished <- checkFinished
-  nextInstrs <- Sq.take 6 . Sq.drop pos <$> gets stInstrs
-  if Sq.null nextInstrs || finished
+  s@SimState {..} <- get
+  if stFinished s
     then return False
     else do
-      step <-
-        if nextInstrs == multPattern
-          then runMult
-          else runInstr (nextInstrs `Sq.index` 0)
-      modify
-        (\st ->
-            st
-            { stPos = stPos st + step
-            })
+      step <- runInstr (stInstrs V.! stPos)
+      modify (\st -> st {stPos = stPos + step})
       return True
-
-checkFinished :: Sim Bool
-checkFinished = do
-  checker <- gets stFinished
-  st <- get
-  return (checker st)
 
 modifyReg :: Reg -> (Int -> Int) -> Sim ()
 modifyReg r@(Reg n) f = do
   prev <- getReg r
   modify
     (\st ->
-        let regs = stRegs st
-        in st
-           { stRegs = M.insert n (f prev) regs
-           })
+       let regs = stRegs st
+       in st {stRegs = M.insert n (f prev) regs})
 
 getReg :: Reg -> Sim Int
 getReg (Reg n) = (fromMaybe 0 . M.lookup n) <$> gets stRegs
@@ -128,9 +117,9 @@ runMult = do
   void $ runInstr (Copy (LitVal 0) (Reg 'd'))
   return 6
 
-multPattern :: Seq Instr
+multPattern :: Vector Instr
 multPattern =
-  Sq.fromList
+  V.fromList
     [ Copy (RegVal (Reg 'b')) (Reg 'c')
     , Inc (Reg 'a')
     , Dec (Reg 'c')
@@ -163,20 +152,15 @@ runInstr (Mult val1 val2 reg) = do
   return 1
 runInstr (Out val) = do
   v <- getVal val
-  modify
-    (\s ->
-        s
-        { stOutput = stOutput s Sq.|> v
-        })
+  modify (\s -> s {stOutput = stOutput s Sq.|> v})
   return 1
 
 toggleInstrAt :: Int -> Sim ()
 toggleInstrAt pos =
   modify
     (\s ->
-        s
-        { stInstrs = Sq.adjust toggleInstr pos (stInstrs s)
-        })
+       let prev = stInstrs s
+       in s {stInstrs = prev V.// [(pos, toggleInstr (prev V.! pos))]})
 
 toggleInstr :: Instr -> Instr
 toggleInstr NoOp = error "toggling no-op"
@@ -189,16 +173,16 @@ toggleInstr _ = NoOp
 
 runSim :: (SimState -> Bool) -> Map Char Int -> [Instr] -> SimState
 runSim done regs instrs =
-  execState run (SimState 0 regs (Sq.fromList instrs) Sq.empty done)
+  execState run (SimState 0 regs (V.fromList instrs) Sq.empty done)
 
 partA :: [Instr] -> Maybe Int
 partA instrs = find ((target ==) . stOutput . runA) [0 ..]
   where
     runA a = runSim done (M.singleton 'a' a) instrs
-    done s =
-      let output = stOutput s
-          outlen = Sq.length output
-      in (output /= Sq.take outlen target) || outlen >= Sq.length target
+    done s = Sq.length (stOutput s) > 20
+      -- let output = stOutput s
+      --     outlen = Sq.length output
+      -- in (output /= Sq.take outlen target) || outlen >= Sq.length target
     target = Sq.fromList (take 100 (cycle [0, 1]))
 
 main :: IO ()
