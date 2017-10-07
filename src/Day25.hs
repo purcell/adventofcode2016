@@ -4,13 +4,11 @@ module Main where
 
 import AdventOfCode
 import Control.Monad.State
+import Data.Char (chr)
 import Data.Foldable (toList)
-import Data.List (find)
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.Maybe (fromMaybe)
-import Data.Sequence (Seq)
-import qualified Data.Sequence as Sq
+import Data.Maybe (fromMaybe, maybeToList)
 import qualified Data.Vector as V
 import Data.Vector (Vector)
 
@@ -61,15 +59,12 @@ data SimState = SimState
   { stPos :: Int
   , stRegs :: Map Char Int
   , stInstrs :: Vector Instr
-  , stOutput :: Seq Int
-  , stFinished :: SimState -> Bool
   }
 
 instance Show SimState where
-  show (SimState pos regs instrs output _) =
+  show (SimState pos regs instrs) =
     unlines
-      (show regs :
-       show output : toList (V.map showins (V.zip (V.fromList [1 ..]) instrs)))
+      (show regs : toList (V.map showins (V.zip (V.fromList [1 ..]) instrs)))
     where
       showins (n, i) =
         show n ++
@@ -80,20 +75,23 @@ instance Show SimState where
 
 type Sim = (State SimState)
 
-run :: Sim ()
+run :: Sim [Int]
 run = do
-  ran <- runNext
-  when ran run
+  (ran, output) <- runNext
+  let produced = maybeToList output
+  if ran
+    then (produced ++) <$> run
+    else return produced
 
-runNext :: Sim Bool
+runNext :: Sim (Bool, Maybe Int)
 runNext = do
-  s@SimState {..} <- get
-  if stFinished s
-    then return False
-    else do
-      step <- runInstr (stInstrs V.! stPos)
+  SimState {..} <- get
+  case stInstrs V.!? stPos of
+    Just instr -> do
+      (step, output) <- runInstr instr
       modify (\st -> st {stPos = stPos + step})
-      return True
+      return (True, output)
+    _ -> return (False, Nothing)
 
 modifyReg :: Reg -> (Int -> Int) -> Sim ()
 modifyReg r@(Reg n) f = do
@@ -128,32 +126,33 @@ multPattern =
     , JumpNotZero (RegVal (Reg 'd')) (LitVal (-5))
     ]
 
-runInstr :: Instr -> Sim Int
-runInstr (Copy val reg) = (getVal val >>= modifyReg reg . const) >> return 1
+runInstr :: Instr -> Sim (Int, Maybe Int)
+runInstr (Copy val reg) =
+  (getVal val >>= modifyReg reg . const) >> return (1, Nothing)
 runInstr (JumpNotZero val1 val2) = do
   v <- getVal val1
   v2 <- getVal val2
   return $
-    if v /= 0
-      then v2
-      else 1
-runInstr (Inc reg) = modifyReg reg (+ 1) >> return 1
-runInstr (Dec reg) = modifyReg reg (\i -> i - 1) >> return 1
+    ( if v /= 0
+        then v2
+        else 1
+    , Nothing)
+runInstr (Inc reg) = modifyReg reg (+ 1) >> return (1, Nothing)
+runInstr (Dec reg) = modifyReg reg (\i -> i - 1) >> return (1, Nothing)
 runInstr (Toggle val) = do
   offset <- getVal val
   pos <- gets stPos
   toggleInstrAt (pos + offset)
-  return 1
-runInstr NoOp = return 1
+  return (1, Nothing)
+runInstr NoOp = return (1, Nothing)
 runInstr (Mult val1 val2 reg) = do
   v1 <- getVal val1
   v2 <- getVal val2
   modifyReg reg (const (v1 * v2))
-  return 1
+  return (1, Nothing)
 runInstr (Out val) = do
   v <- getVal val
-  modify (\s -> s {stOutput = stOutput s Sq.|> v})
-  return 1
+  return (1, Just v)
 
 toggleInstrAt :: Int -> Sim ()
 toggleInstrAt pos =
@@ -171,19 +170,11 @@ toggleInstr (Dec reg) = Inc reg
 toggleInstr (Toggle (RegVal reg)) = Inc reg
 toggleInstr _ = NoOp
 
-runSim :: (SimState -> Bool) -> Map Char Int -> [Instr] -> SimState
-runSim done regs instrs =
-  execState run (SimState 0 regs (V.fromList instrs) Sq.empty done)
+runSim :: Map Char Int -> [Instr] -> [Int]
+runSim regs instrs = evalState run (SimState 0 regs (V.fromList instrs))
 
-partA :: [Instr] -> Maybe Int
-partA instrs = find ((target ==) . stOutput . runA) [0 ..]
-  where
-    runA a = runSim done (M.singleton 'a' a) instrs
-    done s = Sq.length (stOutput s) > 20
-      -- let output = stOutput s
-      --     outlen = Sq.length output
-      -- in (output /= Sq.take outlen target) || outlen >= Sq.length target
-    target = Sq.fromList (take 100 (cycle [0, 1]))
+partA :: [Instr] -> String
+partA instrs = chr <$> runSim M.empty instrs
 
 main :: IO ()
 main = runDay day25
